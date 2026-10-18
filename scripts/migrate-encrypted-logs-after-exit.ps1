@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory)][string]$Source,
     [Parameter(Mandatory)][string]$Target,
     [string]$LogRoot = (Join-Path (Get-Location) 'tmp'),
-    [int]$WaitTimeoutMinutes = 1440
+    [int]$WaitTimeoutMinutes = 1440,
+    [string]$TaskName = ''
 )
 
 Set-StrictMode -Version Latest
@@ -154,6 +155,16 @@ function Restore-SourceIfNeeded {
     }
 }
 
+function Remove-SelfTask {
+    if ([string]::IsNullOrWhiteSpace($TaskName)) { return }
+    try {
+        & "$env:SystemRoot\System32\schtasks.exe" /Delete /TN $TaskName /F | Out-Null
+        Write-Log "Removed one-shot scheduled task: $TaskName"
+    } catch {
+        Write-Log ("Could not remove scheduled task: " + $_.Exception.Message) 'WARN'
+    }
+}
+
 function Test-EfsRawCopy {
     $probeRoot = Join-Path $LogRoot "codex-efs-probe-$runId"
     try {
@@ -237,6 +248,7 @@ try {
 
     Save-State -Status 'Complete' -Message 'Logs migrated with EFSRAW, manifest verification, ACL verification, Junction verification, and encrypted write probe.'
     Write-Log "Migration complete. C backup retained at $backup"
+    Remove-SelfTask
     Start-Process -FilePath (Join-Path $env:SystemRoot 'explorer.exe') -ArgumentList 'codex:'
     exit 0
 } catch {
@@ -246,6 +258,7 @@ try {
         try { Restore-SourceIfNeeded } catch { Write-Log ("Rollback failed: " + $_.Exception.Message) 'ERROR' }
     }
     # The target is intentionally retained for inspection; no unverified data is deleted.
+    Remove-SelfTask
     try { Start-Process -FilePath (Join-Path $env:SystemRoot 'explorer.exe') -ArgumentList 'codex:' } catch { }
     exit 1
 }
