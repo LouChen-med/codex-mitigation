@@ -1,0 +1,19 @@
+# Never publish local state or credentials
+auth.json
+**/auth.json
+*.log
+*.sqlite
+*.sqlite-*
+migration-state.json
+migration.lock
+rollback/
+**/rollback/
+*.bak
+*.backup
+cookies
+**/Cookies
+**/Login Data
+**/Network/
+.env
+.venv/
+__pycache__/
