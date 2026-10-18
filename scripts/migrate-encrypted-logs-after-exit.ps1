@@ -47,7 +47,7 @@ function Save-State {
 function Get-BlockingProcess {
     $names = @(
         'ChatGPT', 'codex', 'codex-code-mode-host',
-        'codex-computer-use-swift', 'codex-windows-sandbox-service',
+        'codex-computer-use-swift',
         'codex-command-runner', 'Code'
     )
     @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $names -contains $_.ProcessName })
